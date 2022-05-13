@@ -1,5 +1,6 @@
 import random
 import socketserver
+import threading
 
 from foo import *
 from Asteroid import Asteroid
@@ -44,7 +45,7 @@ def serve():
         asteroid.append(Asteroid())
 
 
-class MyUDPHandler(socketserver.BaseRequestHandler):
+class ThreadedUDPHandler(socketserver.BaseRequestHandler):
     """
     This class works similar to the TCP handler class, except that
     self.request consists of a pair of data and client socket, and since
@@ -112,8 +113,12 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
             socket.sendto(bytes(msg, "utf-8"), self.client_address)
 
 
+class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
+    pass
+
+
 HOST, PORT = "localhost", 666
 
-with socketserver.UDPServer((HOST, PORT), MyUDPHandler) as server:
+with ThreadedUDPServer((HOST, PORT), ThreadedUDPHandler) as server:
     server.service_actions = serve
     server.serve_forever(poll_interval=0.015625)  # 64 times per second
