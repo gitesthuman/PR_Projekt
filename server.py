@@ -7,7 +7,8 @@ from Asteroid import Asteroid
 semaphore = threading.Lock()
 
 asteroids = []
-limit = 64*10
+gameDuration = 30 # in seconds
+limit = 64*gameDuration
 counter = 0
 over = False
 scores = dict()
@@ -73,6 +74,14 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
             scores[self.client_address[1]] = 0
 
         msg = data.decode("utf-8")
+
+        # check if game is over
+        if over:
+            points = [str(scores[self.client_address[1]])] \
+                     + [str(scores[k]) for k in scores.keys() if k != self.client_address[1]]
+            msg = "o" + ','.join(points)
+            socket.sendto(bytes(msg, "utf-8"), self.client_address)
+            return
 
         # lobby
         global playersReady
