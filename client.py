@@ -2,7 +2,6 @@ import socket
 import sys
 import pygame
 
-from foo import *
 
 HOST, PORT = "localhost", 666
 data = " ".join(sys.argv[1:])

@@ -1,16 +1,15 @@
 import random
 import socketserver
-import threading
 
-from foo import *
 from Asteroid import Asteroid
 
-asteroid = []
+asteroids = []
 limit = 64*10
 counter = 0
 over = False
 scores = dict()
 coords = dict()
+shotAsteroids = dict()
 playersReady = 0
 gameStarted = False
 
@@ -19,30 +18,40 @@ def serve():
     global counter
     global over
     global gameStarted
+    global shotAsteroids
+    global asteroids
 
     if not gameStarted:
         return
 
     if counter % 64 == 63:
-        print(len(asteroid))
+        print(len(asteroids))
     if counter < limit:
         counter += 1
     if counter == limit and not over:
         print("Game Over")
         over = True
 
-    for ast in asteroid:
+    # add points to players
+    for astIndex in shotAsteroids:
+        scores[shotAsteroids[astIndex][0]] += 100
+
+    # delete shot asteroids
+    asteroids = [asteroids[i] for i in range(len(asteroids)) if i not in shotAsteroids]
+    shotAsteroids = dict()
+
+    for ast in asteroids:
         ast.move()
 
     i = 0
-    while i < len(asteroid):
-        if asteroid[i].out():
-            del asteroid[i]
+    while i < len(asteroids):
+        if asteroids[i].out():
+            del asteroids[i]
             i -= 1
         i += 1
 
     if random.randint(0, 200) == 0:
-        asteroid.append(Asteroid())
+        asteroids.append(Asteroid())
 
 
 class ThreadedUDPHandler(socketserver.BaseRequestHandler):
@@ -86,11 +95,11 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
                 print("Client {}: {}".format(self.client_address[1], parts))
                 coords[self.client_address[1]] = [int(parts[1]), int(parts[2])]
                 i = 0
-                while i < len(asteroid):
-                    if asteroid[i].hitbox(coords[self.client_address[1]]):
-                        del asteroid[i]
-                        i -= 1
-                        scores[self.client_address[1]] += 100
+                while i < len(asteroids):
+                    if asteroids[i].hitbox(coords[self.client_address[1]]):
+                        # Decide whether the player was first to shoot this asteroid
+                        if i not in shotAsteroids.keys() or shotAsteroids[i][1] > parts[0]:
+                            shotAsteroids[i] = (self.client_address[1], parts[0])
                     i += 1
             else:
                 parts = msg.split(",")
@@ -108,7 +117,7 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
             print()
 
             msg = ",".join(points) + "." + ",".join(pos[0])
-            for ast in asteroid:
+            for ast in asteroids:
                 msg += "." + str(round(ast.cords()[0])) + "," + str(round(ast.cords()[1]))
             socket.sendto(bytes(msg, "utf-8"), self.client_address)
 
