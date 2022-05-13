@@ -1,7 +1,10 @@
 import random
 import socketserver
+import threading
 
 from Asteroid import Asteroid
+
+semaphore = threading.Lock()
 
 asteroids = []
 limit = 64*10
@@ -75,19 +78,21 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
         global playersReady
         global gameStarted
         if msg == "l":
-            if playersReady >= 2:
-                socket.sendto(bytes("s", "utf-8"), self.client_address)
-                gameStarted = True
-            else:
-                socket.sendto(bytes("l", "utf-8"), self.client_address)
+            with semaphore:
+                if playersReady >= 2:
+                    socket.sendto(bytes("s", "utf-8"), self.client_address)
+                    gameStarted = True
+                else:
+                    socket.sendto(bytes("l", "utf-8"), self.client_address)
         elif msg == "s":
-            playersReady += 1
-            print("Players: ", playersReady)
-            if playersReady >= 2:
-                socket.sendto(bytes("s", "utf-8"), self.client_address)
-                gameStarted = True
-            else:
-                socket.sendto(bytes("l", "utf-8"), self.client_address)
+            with semaphore:
+                playersReady += 1
+                print("Players: ", playersReady)
+                if playersReady >= 2:
+                    socket.sendto(bytes("s", "utf-8"), self.client_address)
+                    gameStarted = True
+                else:
+                    socket.sendto(bytes("l", "utf-8"), self.client_address)
 
         else:
             if msg[0] == "c":
@@ -98,8 +103,9 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
                 while i < len(asteroids):
                     if asteroids[i].hitbox(coords[self.client_address[1]]):
                         # Decide whether the player was first to shoot this asteroid
-                        if i not in shotAsteroids.keys() or shotAsteroids[i][1] > parts[0]:
-                            shotAsteroids[i] = (self.client_address[1], parts[0])
+                        with semaphore:
+                            if i not in shotAsteroids.keys() or shotAsteroids[i][1] > parts[0]:
+                                shotAsteroids[i] = (self.client_address[1], parts[0])
                     i += 1
             else:
                 parts = msg.split(",")
