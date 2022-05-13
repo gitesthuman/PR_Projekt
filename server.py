@@ -7,7 +7,7 @@ from Asteroid import Asteroid
 semaphore = threading.Lock()
 
 asteroids = []
-gameDuration = 30 # in seconds
+gameDuration = 30  # in seconds
 limit = 64*gameDuration
 counter = 0
 over = False
@@ -128,8 +128,8 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
             if len(pos) == 0:
                 pos = [["-100", "-100"]]
 
-            print(pos)
-            print()
+            # print(pos)
+            # print()
 
             msg = ",".join(points) + "." + ",".join(pos[0])
             for ast in asteroids:

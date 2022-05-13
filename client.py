@@ -22,6 +22,9 @@ points = [0, 0]
 timer = 0
 isDraw = False
 win = False
+crosshair_img = pygame.image.load("assets/crosshair.png")
+crosshair2_img = pygame.image.load("assets/crosshair2.png")
+asteroid_img = pygame.image.load("assets/asteroid.png")
 
 
 # As you can see, there is no connect() call; UDP has no connections.
@@ -96,15 +99,18 @@ while gameRunning:
     for pol in parts[2:]:
         cor = [int(i) for i in pol.split(",")]
         pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(cor[0] - 15, cor[1] - 15, 30, 30))
+        screen.blit(asteroid_img, (cor[0] - asteroid_img.get_width() / 2, cor[1] - asteroid_img.get_height() / 2))
 
     # crosshair
-    pygame.draw.circle(screen, (0, 255, 0), (mouse[0], mouse[1]), 15, 1)
-    pygame.draw.line(screen, (0, 255, 0), (mouse[0], mouse[1] - 20), (mouse[0], mouse[1] + 20), 1)
-    pygame.draw.line(screen, (0, 255, 0), (mouse[0] - 20, mouse[1]), (mouse[0] + 20, mouse[1]), 1)
+    # pygame.draw.circle(screen, (0, 255, 0), (mouse[0], mouse[1]), 15, 1)
+    # pygame.draw.line(screen, (0, 255, 0), (mouse[0], mouse[1] - 20), (mouse[0], mouse[1] + 20), 1)
+    # pygame.draw.line(screen, (0, 255, 0), (mouse[0] - 20, mouse[1]), (mouse[0] + 20, mouse[1]), 1)
+    screen.blit(crosshair_img, (mouse[0] - crosshair_img.get_width()/2, mouse[1] - crosshair_img.get_height()/2))
+    screen.blit(crosshair2_img, (op[0] - crosshair2_img.get_width()/2, op[1] - crosshair2_img.get_height()/2))
 
-    pygame.draw.circle(screen, (255, 0, 0), (op[0], op[1]), 15, 1)
-    pygame.draw.line(screen, (255, 0, 0), (op[0], op[1] - 20), (op[0], op[1] + 20), 1)
-    pygame.draw.line(screen, (255, 0, 0), (op[0] - 20, op[1]), (op[0] + 20, op[1]), 1)
+    # pygame.draw.circle(screen, (255, 0, 0), (op[0], op[1]), 15, 1)
+    # pygame.draw.line(screen, (255, 0, 0), (op[0], op[1] - 20), (op[0], op[1] + 20), 1)
+    # pygame.draw.line(screen, (255, 0, 0), (op[0] - 20, op[1]), (op[0] + 20, op[1]), 1)
 
     text = font.render(str(points[0]), True, (255, 255, 255))
     screen.blit(text, (SCREEN_WIDTH - text.get_width() - 5, 400 - text.get_height() - 5))
@@ -113,6 +119,7 @@ while gameRunning:
 
 
 finalFont = pygame.font.SysFont('Arial', 25)
+pygame.mouse.set_visible(True)
 # Scores
 while True:
     screen.fill((0, 0, 0))
@@ -127,7 +134,7 @@ while True:
         text = finalFont.render("YOU WON!", True, (255, 255, 255))
         screen.blit(text, (SCREEN_WIDTH/2 - text.get_width()/2, SCREEN_HEIGHT/2 - text.get_height()/2))
     else:
-        text = finalFont.render("YOU LOOSE!", True, (255, 255, 255))
+        text = finalFont.render("YOU LOSE!", True, (255, 255, 255))
         screen.blit(text, (SCREEN_WIDTH/2 - text.get_width()/2, SCREEN_HEIGHT/2 - text.get_height()/2))
 
     # updates the frames of the game
