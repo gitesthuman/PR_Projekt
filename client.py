@@ -20,6 +20,8 @@ clock = pygame.time.Clock()
 gameRunning = False
 points = [0, 0]
 timer = 0
+isDraw = False
+win = False
 
 
 # As you can see, there is no connect() call; UDP has no connections.
@@ -77,6 +79,14 @@ while gameRunning:
     sock.sendto(bytes(msg + str(mouse[0]) + "," + str(mouse[1]), "utf-8"), (HOST, PORT))
     received = str(sock.recv(1024), "utf-8")
 
+    if received[0] == "o":
+        points = received[1:].split(',')
+        if points[0] > max(points[1:]):
+            win = True
+        elif points[0] == max(points[1:]):
+            isDraw = True
+        gameRunning = False
+
     if not gameRunning:
         break
 
@@ -99,6 +109,28 @@ while gameRunning:
     text = font.render(str(points[0]), True, (255, 255, 255))
     screen.blit(text, (SCREEN_WIDTH - text.get_width() - 5, 400 - text.get_height() - 5))
 
+    pygame.display.update()
+
+
+finalFont = pygame.font.SysFont('Arial', 25)
+# Scores
+while True:
+    screen.fill((0, 0, 0))
+    for ev in pygame.event.get():
+        if ev.type == pygame.QUIT:
+            pygame.quit()
+
+    if isDraw:
+        text = finalFont.render("DRAW!", True, (255, 255, 255))
+        screen.blit(text, (SCREEN_WIDTH / 2 - text.get_width() / 2, SCREEN_HEIGHT / 2 - text.get_height() / 2))
+    elif win:
+        text = finalFont.render("YOU WON!", True, (255, 255, 255))
+        screen.blit(text, (SCREEN_WIDTH/2 - text.get_width()/2, SCREEN_HEIGHT/2 - text.get_height()/2))
+    else:
+        text = finalFont.render("YOU LOOSE!", True, (255, 255, 255))
+        screen.blit(text, (SCREEN_WIDTH/2 - text.get_width()/2, SCREEN_HEIGHT/2 - text.get_height()/2))
+
+    # updates the frames of the game
     pygame.display.update()
 
 # sock.sendto(bytes("q", "utf-8"), (HOST, PORT))
