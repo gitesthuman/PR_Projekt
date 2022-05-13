@@ -1,44 +1,60 @@
 import random
 import socketserver
 
-from foo import *
 from Asteroid import Asteroid
 
-asteroid = []
+asteroids = []
 limit = 64*10
 counter = 0
 over = False
 scores = dict()
 coords = dict()
+shotAsteroids = dict()
+playersReady = 0
+gameStarted = False
 
 
 def serve():
     global counter
     global over
+    global gameStarted
+    global shotAsteroids
+    global asteroids
+
+    if not gameStarted:
+        return
 
     if counter % 64 == 63:
-        print(len(asteroid))
+        print(len(asteroids))
     if counter < limit:
         counter += 1
     if counter == limit and not over:
         print("Game Over")
         over = True
 
-    for ast in asteroid:
+    # add points to players
+    for astIndex in shotAsteroids:
+        scores[shotAsteroids[astIndex][0]] += 100
+
+    # delete shot asteroids
+    asteroids = [asteroids[i] for i in range(len(asteroids)) if i not in shotAsteroids]
+    shotAsteroids = dict()
+
+    for ast in asteroids:
         ast.move()
 
     i = 0
-    while i < len(asteroid):
-        if asteroid[i].out():
-            del asteroid[i]
+    while i < len(asteroids):
+        if asteroids[i].out():
+            del asteroids[i]
             i -= 1
         i += 1
 
     if random.randint(0, 200) == 0:
-        asteroid.append(Asteroid())
+        asteroids.append(Asteroid())
 
 
-class MyUDPHandler(socketserver.BaseRequestHandler):
+class ThreadedUDPHandler(socketserver.BaseRequestHandler):
     """
     This class works similar to the TCP handler class, except that
     self.request consists of a pair of data and client socket, and since
@@ -54,40 +70,64 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
             scores[self.client_address[1]] = 0
 
         msg = data.decode("utf-8")
-        if msg[0] == "c":
-            parts = msg[1:].split(",")
-            print("Client {}: {}".format(self.client_address[1], parts))
-            coords[self.client_address[1]] = [int(parts[1]), int(parts[2])]
-            i = 0
-            while i < len(asteroid):
-                if asteroid[i].hitbox(coords[self.client_address[1]]):
-                    del asteroid[i]
-                    i -= 1
-                    scores[self.client_address[1]] += 100
-                i += 1
+
+        # lobby
+        global playersReady
+        global gameStarted
+        if msg == "l":
+            if playersReady >= 2:
+                socket.sendto(bytes("s", "utf-8"), self.client_address)
+                gameStarted = True
+            else:
+                socket.sendto(bytes("l", "utf-8"), self.client_address)
+        elif msg == "s":
+            playersReady += 1
+            print("Players: ", playersReady)
+            if playersReady >= 2:
+                socket.sendto(bytes("s", "utf-8"), self.client_address)
+                gameStarted = True
+            else:
+                socket.sendto(bytes("l", "utf-8"), self.client_address)
+
         else:
-            parts = msg.split(",")
-            coords[self.client_address[1]] = [int(parts[0]), int(parts[1])]
-        # if msg == "q":  # TODO
-        #     print("Client {} disconnected\n".format(self.client_address[1]))
+            if msg[0] == "c":
+                parts = msg[1:].split(",")
+                print("Client {}: {}".format(self.client_address[1], parts))
+                coords[self.client_address[1]] = [int(parts[1]), int(parts[2])]
+                i = 0
+                while i < len(asteroids):
+                    if asteroids[i].hitbox(coords[self.client_address[1]]):
+                        # Decide whether the player was first to shoot this asteroid
+                        if i not in shotAsteroids.keys() or shotAsteroids[i][1] > parts[0]:
+                            shotAsteroids[i] = (self.client_address[1], parts[0])
+                    i += 1
+            else:
+                parts = msg.split(",")
+                coords[self.client_address[1]] = [int(parts[0]), int(parts[1])]
+            # if msg == "q":  # TODO
+            #     print("Client {} disconnected\n".format(self.client_address[1]))
 
-        points = [str(scores[self.client_address[1]])] \
-            + [str(scores[k]) for k in scores.keys() if k != self.client_address[1]]
-        pos = [[str(x) for x in coords[k]] for k in coords.keys() if k != self.client_address[1]]
-        if len(pos) == 0:
-            pos = [["-100", "-100"]]
+            points = [str(scores[self.client_address[1]])] \
+                + [str(scores[k]) for k in scores.keys() if k != self.client_address[1]]
+            pos = [[str(x) for x in coords[k]] for k in coords.keys() if k != self.client_address[1]]
+            if len(pos) == 0:
+                pos = [["-100", "-100"]]
 
-        print(pos)
-        print()
+            print(pos)
+            print()
 
-        msg = ",".join(points) + "." + ",".join(pos[0])
-        for ast in asteroid:
-            msg += "." + str(round(ast.cords()[0])) + "," + str(round(ast.cords()[1]))
-        socket.sendto(bytes(msg, "utf-8"), self.client_address)
+            msg = ",".join(points) + "." + ",".join(pos[0])
+            for ast in asteroids:
+                msg += "." + str(round(ast.cords()[0])) + "," + str(round(ast.cords()[1]))
+            socket.sendto(bytes(msg, "utf-8"), self.client_address)
+
+
+class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
+    pass
 
 
 HOST, PORT = "localhost", 666
 
-with socketserver.UDPServer((HOST, PORT), MyUDPHandler) as server:
+with ThreadedUDPServer((HOST, PORT), ThreadedUDPHandler) as server:
     server.service_actions = serve
     server.serve_forever(poll_interval=0.015625)  # 64 times per second
