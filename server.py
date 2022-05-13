@@ -10,11 +10,17 @@ counter = 0
 over = False
 scores = dict()
 coords = dict()
+playersReady = 0
+gameStarted = False
 
 
 def serve():
     global counter
     global over
+    global gameStarted
+
+    if not gameStarted:
+        return
 
     if counter % 64 == 63:
         print(len(asteroid))
@@ -54,36 +60,56 @@ class MyUDPHandler(socketserver.BaseRequestHandler):
             scores[self.client_address[1]] = 0
 
         msg = data.decode("utf-8")
-        if msg[0] == "c":
-            parts = msg[1:].split(",")
-            print("Client {}: {}".format(self.client_address[1], parts))
-            coords[self.client_address[1]] = [int(parts[1]), int(parts[2])]
-            i = 0
-            while i < len(asteroid):
-                if asteroid[i].hitbox(coords[self.client_address[1]]):
-                    del asteroid[i]
-                    i -= 1
-                    scores[self.client_address[1]] += 100
-                i += 1
+
+        # lobby
+        global playersReady
+        global gameStarted
+        if msg == "l":
+            if playersReady >= 2:
+                socket.sendto(bytes("s", "utf-8"), self.client_address)
+                gameStarted = True
+            else:
+                socket.sendto(bytes("l", "utf-8"), self.client_address)
+        elif msg == "s":
+            playersReady += 1
+            print("Players: ", playersReady)
+            if playersReady >= 2:
+                socket.sendto(bytes("s", "utf-8"), self.client_address)
+                gameStarted = True
+            else:
+                socket.sendto(bytes("l", "utf-8"), self.client_address)
+
         else:
-            parts = msg.split(",")
-            coords[self.client_address[1]] = [int(parts[0]), int(parts[1])]
-        # if msg == "q":  # TODO
-        #     print("Client {} disconnected\n".format(self.client_address[1]))
+            if msg[0] == "c":
+                parts = msg[1:].split(",")
+                print("Client {}: {}".format(self.client_address[1], parts))
+                coords[self.client_address[1]] = [int(parts[1]), int(parts[2])]
+                i = 0
+                while i < len(asteroid):
+                    if asteroid[i].hitbox(coords[self.client_address[1]]):
+                        del asteroid[i]
+                        i -= 1
+                        scores[self.client_address[1]] += 100
+                    i += 1
+            else:
+                parts = msg.split(",")
+                coords[self.client_address[1]] = [int(parts[0]), int(parts[1])]
+            # if msg == "q":  # TODO
+            #     print("Client {} disconnected\n".format(self.client_address[1]))
 
-        points = [str(scores[self.client_address[1]])] \
-            + [str(scores[k]) for k in scores.keys() if k != self.client_address[1]]
-        pos = [[str(x) for x in coords[k]] for k in coords.keys() if k != self.client_address[1]]
-        if len(pos) == 0:
-            pos = [["-100", "-100"]]
+            points = [str(scores[self.client_address[1]])] \
+                + [str(scores[k]) for k in scores.keys() if k != self.client_address[1]]
+            pos = [[str(x) for x in coords[k]] for k in coords.keys() if k != self.client_address[1]]
+            if len(pos) == 0:
+                pos = [["-100", "-100"]]
 
-        print(pos)
-        print()
+            print(pos)
+            print()
 
-        msg = ",".join(points) + "." + ",".join(pos[0])
-        for ast in asteroid:
-            msg += "." + str(round(ast.cords()[0])) + "," + str(round(ast.cords()[1]))
-        socket.sendto(bytes(msg, "utf-8"), self.client_address)
+            msg = ",".join(points) + "." + ",".join(pos[0])
+            for ast in asteroid:
+                msg += "." + str(round(ast.cords()[0])) + "," + str(round(ast.cords()[1]))
+            socket.sendto(bytes(msg, "utf-8"), self.client_address)
 
 
 HOST, PORT = "localhost", 666
