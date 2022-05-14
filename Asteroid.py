@@ -1,12 +1,12 @@
 import random
 
-width = 600
-height = 400
+width = 640
+height = 480
 
 
 class Asteroid:
     def __init__(self):
-        self.__size = 30
+        self.__size = 64
         self.__dx = 1
         self.__dy = 1
 
@@ -31,8 +31,8 @@ class Asteroid:
             self.__dx = 0
             self.__dy = 0
 
-        self.__dx *= random.random() * 5
-        self.__dy *= random.random() * 5
+        self.__dx *= random.random() * 4
+        self.__dy *= random.random() * 4
 
         if self.__x >= width / 2:
             self.__dx *= -1

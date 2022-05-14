@@ -1,10 +1,8 @@
 import socket
-import sys
 import pygame
 
 
 HOST, PORT = "localhost", 666
-data = " ".join(sys.argv[1:])
 
 # SOCK_DGRAM is the socket type to use for UDP sockets
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -12,10 +10,10 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 print("Connected to the server")
 pygame.init()
 pygame.display.set_caption("Shooter")
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 400
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 480
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-font = pygame.font.SysFont('Arial', 18)
+font = pygame.font.SysFont('Arial black', 18)
 clock = pygame.time.Clock()
 gameRunning = False
 points = [0, 0]
@@ -25,6 +23,7 @@ win = False
 crosshair_img = pygame.image.load("assets/crosshair.png")
 crosshair2_img = pygame.image.load("assets/crosshair2.png")
 asteroid_img = pygame.image.load("assets/asteroid.png")
+space_img = pygame.transform.scale(pygame.image.load("assets/space.png"), (640, 480))
 
 
 # As you can see, there is no connect() call; UDP has no connections.
@@ -46,28 +45,33 @@ while not gameRunning:
             if SCREEN_WIDTH / 2 - 70 <= mouse[0] <= SCREEN_WIDTH / 2 + 70 and SCREEN_HEIGHT / 2 <= mouse[1] <= SCREEN_HEIGHT / 2 + 40:
                 msg = "s"
                 clicked = True
+                buttonText = font.render('WAITING...', True, (255, 255, 255))
 
     sock.sendto(bytes(msg, "utf-8"), (HOST, PORT))
     received = str(sock.recv(1024), "utf-8")
     if received == "s":
         gameRunning = True
 
-    if SCREEN_WIDTH / 2 - 70 <= mouse[0] <= SCREEN_WIDTH / 2 + 70 and SCREEN_HEIGHT / 2 <= mouse[1] <= SCREEN_HEIGHT / 2 + 40:
-        pygame.draw.rect(screen, (200, 200, 200), [SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2, 140, 40])
+    if clicked:
+        pygame.draw.rect(screen, (3, 161, 11), (SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 - 20, 140, 40))
     else:
-        pygame.draw.rect(screen, (100, 100, 100), [SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2, 140, 40])
+        if SCREEN_WIDTH / 2 - 70 <= mouse[0] <= SCREEN_WIDTH / 2 + 70 and SCREEN_HEIGHT / 2 <= mouse[1] <= SCREEN_HEIGHT / 2 + 40:
+            pygame.draw.rect(screen, (200, 200, 200), (SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 - 20, 140, 40))
+        else:
+            pygame.draw.rect(screen, (100, 100, 100), (SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 - 20, 140, 40))
 
-    screen.blit(buttonText, (SCREEN_WIDTH / 2 - 60, SCREEN_HEIGHT / 2 + 5))
+    screen.blit(buttonText, (SCREEN_WIDTH / 2 - buttonText.get_width() / 2, SCREEN_HEIGHT / 2 - buttonText.get_height() / 2))
 
     # updates the frames of the game
     pygame.display.update()
 
 
+point_font = pygame.font.SysFont('Arial black', 24)
 pygame.mouse.set_visible(False)
 # game loop
 while gameRunning:
     timer += 1
-    screen.fill((0, 0, 0))
+    screen.blit(space_img, (0, 0))
     mouse = pygame.mouse.get_pos()
     clock.tick(64)
     msg = ""
@@ -96,24 +100,20 @@ while gameRunning:
     parts = received.split(".")
     points = [int(i) for i in parts[0].split(",")]
     op = [int(i) for i in parts[1].split(",")]
+
+    # asteroids
     for pol in parts[2:]:
         cor = [int(i) for i in pol.split(",")]
         pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(cor[0] - 15, cor[1] - 15, 30, 30))
         screen.blit(asteroid_img, (cor[0] - asteroid_img.get_width() / 2, cor[1] - asteroid_img.get_height() / 2))
 
-    # crosshair
-    # pygame.draw.circle(screen, (0, 255, 0), (mouse[0], mouse[1]), 15, 1)
-    # pygame.draw.line(screen, (0, 255, 0), (mouse[0], mouse[1] - 20), (mouse[0], mouse[1] + 20), 1)
-    # pygame.draw.line(screen, (0, 255, 0), (mouse[0] - 20, mouse[1]), (mouse[0] + 20, mouse[1]), 1)
+    # crosshairs
     screen.blit(crosshair_img, (mouse[0] - crosshair_img.get_width()/2, mouse[1] - crosshair_img.get_height()/2))
     screen.blit(crosshair2_img, (op[0] - crosshair2_img.get_width()/2, op[1] - crosshair2_img.get_height()/2))
 
-    # pygame.draw.circle(screen, (255, 0, 0), (op[0], op[1]), 15, 1)
-    # pygame.draw.line(screen, (255, 0, 0), (op[0], op[1] - 20), (op[0], op[1] + 20), 1)
-    # pygame.draw.line(screen, (255, 0, 0), (op[0] - 20, op[1]), (op[0] + 20, op[1]), 1)
-
-    text = font.render(str(points[0]), True, (255, 255, 255))
-    screen.blit(text, (SCREEN_WIDTH - text.get_width() - 5, 400 - text.get_height() - 5))
+    # scores
+    my_score = point_font.render(str(points[0]), True, (4, 219, 15))
+    screen.blit(my_score, (SCREEN_WIDTH - my_score.get_width() - 5, SCREEN_HEIGHT - my_score.get_height() - 5))
 
     pygame.display.update()
 

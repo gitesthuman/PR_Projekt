@@ -7,8 +7,8 @@ from Asteroid import Asteroid
 semaphore = threading.Lock()
 
 asteroids = []
-gameDuration = 30  # in seconds
-limit = 64*gameDuration
+gameDuration = 60  # in seconds
+limit = 64 * gameDuration
 counter = 0
 over = False
 scores = dict()
@@ -29,7 +29,7 @@ def serve():
         return
 
     if counter % 64 == 63:
-        print(len(asteroids))
+        print(counter // 64 + 1)
     if counter < limit:
         counter += 1
     if counter == limit and not over:
@@ -54,7 +54,7 @@ def serve():
             i -= 1
         i += 1
 
-    if random.randint(0, 200) == 0:
+    if random.randint(0, 200) == 0 and counter >= 3 * 64:
         asteroids.append(Asteroid())
 
 
@@ -119,8 +119,6 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
             else:
                 parts = msg.split(",")
                 coords[self.client_address[1]] = [int(parts[0]), int(parts[1])]
-            # if msg == "q":  # TODO
-            #     print("Client {} disconnected\n".format(self.client_address[1]))
 
             points = [str(scores[self.client_address[1]])] \
                 + [str(scores[k]) for k in scores.keys() if k != self.client_address[1]]
