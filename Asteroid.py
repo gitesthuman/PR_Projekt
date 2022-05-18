@@ -31,8 +31,8 @@ class Asteroid:
             self.__dx = 0
             self.__dy = 0
 
-        self.__dx *= random.random() * 4
-        self.__dy *= random.random() * 4
+        self.__dx *= random.random() * 10
+        self.__dy *= random.random() * 10
 
         if self.__x >= width / 2:
             self.__dx *= -1

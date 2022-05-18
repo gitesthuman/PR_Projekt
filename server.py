@@ -1,6 +1,7 @@
 import random
 import socketserver
 import threading
+import time
 
 from Asteroid import Asteroid
 
@@ -19,44 +20,48 @@ playersLeftScoreboard = 0
 gameStarted = False
 
 
-def serve():
+def spawn():
     global counter
     global over
     global gameStarted
     global shotAsteroids
     global asteroids
 
-    if not gameStarted:
-        return
+    while True:
+        if not gameStarted:
+            continue
 
-    if counter % 64 == 63:
-        print(counter // 64 + 1)
-    if counter < limit:
-        counter += 1
-    if counter == limit and not over:
-        print("Game Over")
-        over = True
+        if counter % 64 == 63:
+            print(counter // 64 + 1)
+        if counter < limit:
+            counter += 1
+        if counter == limit and not over:
+            print("Game Over")
+            over = True
 
-    # add points to players
-    for astIndex in shotAsteroids:
-        scores[shotAsteroids[astIndex][0]] += 100
+        # add points to players
+        for astIndex in shotAsteroids:
+            scores[shotAsteroids[astIndex][0]] += 100
 
-    # delete shot asteroids
-    asteroids = [asteroids[i] for i in range(len(asteroids)) if i not in shotAsteroids]
-    shotAsteroids = dict()
+        # delete shot asteroids
+        asteroids = [asteroids[i] for i in range(len(asteroids)) if i not in shotAsteroids]
+        shotAsteroids = dict()
 
-    for ast in asteroids:
-        ast.move()
+        for ast in asteroids:
+            ast.move()
 
-    i = 0
-    while i < len(asteroids):
-        if asteroids[i].out():
-            del asteroids[i]
-            i -= 1
-        i += 1
+        i = 0
+        while i < len(asteroids):
+            if asteroids[i].out():
+                del asteroids[i]
+                i -= 1
+            i += 1
 
-    if random.randint(0, 200) == 0 and counter >= 3 * 64:
-        asteroids.append(Asteroid())
+        if random.randint(0, 200) == 0 and counter >= 3 * 64:
+            asteroids.append(Asteroid())
+
+        time.sleep(0.014)
+        # time.sleep(0.015625)
 
 
 class ThreadedUDPHandler(socketserver.BaseRequestHandler):
@@ -148,9 +153,6 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
             if len(pos) == 0:
                 pos = [["-100", "-100"]]
 
-            # print(pos)
-            # print()
-
             msg = ",".join(points) + "." + ",".join(pos[0])
             for ast in asteroids:
                 msg += "." + str(round(ast.cords()[0])) + "," + str(round(ast.cords()[1]))
@@ -162,7 +164,8 @@ class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
 
 
 HOST, PORT = "localhost", 666
+t = threading.Thread(target=spawn)
 
 with ThreadedUDPServer((HOST, PORT), ThreadedUDPHandler) as server:
-    server.service_actions = serve
-    server.serve_forever(poll_interval=0.015625)  # 64 times per second
+    t.start()
+    server.serve_forever()  # 64 times per second
