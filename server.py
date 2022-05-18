@@ -7,7 +7,7 @@ from Asteroid import Asteroid
 semaphore = threading.Lock()
 
 asteroids = []
-gameDuration = 60  # in seconds
+gameDuration = 15  # in seconds
 limit = 64 * gameDuration
 counter = 0
 over = False
@@ -15,6 +15,7 @@ scores = dict()
 coords = dict()
 shotAsteroids = dict()
 playersReady = 0
+playersLeftScoreboard = 0
 gameStarted = False
 
 
@@ -67,6 +68,12 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
     """
 
     def handle(self):
+        global scores
+        global over
+        global playersReady
+        global playersLeftScoreboard
+        global counter
+        global gameStarted
         data = self.request[0].strip()
         socket = self.request[1]
 
@@ -76,33 +83,48 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
         msg = data.decode("utf-8")
 
         # check if game is over
-        if over:
+        if over and msg != "e" and msg != "p" and msg != "s" and msg != "l":
             points = [str(scores[self.client_address[1]])] \
                      + [str(scores[k]) for k in scores.keys() if k != self.client_address[1]]
             msg = "o" + ','.join(points)
             socket.sendto(bytes(msg, "utf-8"), self.client_address)
+            gameStarted = False
+            counter = 0
             return
 
-        # lobby
-        global playersReady
-        global gameStarted
+        # player is in lobby
         if msg == "l":
             with semaphore:
-                if playersReady >= 2:
+                if playersReady >= 2 and playersLeftScoreboard != 1:
                     socket.sendto(bytes("s", "utf-8"), self.client_address)
                     gameStarted = True
+                    playersLeftScoreboard = 0
                 else:
                     socket.sendto(bytes("l", "utf-8"), self.client_address)
+        # player wants to start a game (clicked a button)
         elif msg == "s":
             with semaphore:
                 playersReady += 1
                 print("Players: ", playersReady)
-                if playersReady >= 2:
+                if playersReady >= 2 and playersLeftScoreboard != 1:
                     socket.sendto(bytes("s", "utf-8"), self.client_address)
                     gameStarted = True
+                    playersLeftScoreboard = 0
                 else:
                     socket.sendto(bytes("l", "utf-8"), self.client_address)
-
+        # player is in scoreboard
+        elif msg == "e":
+            socket.sendto(bytes("e", "utf-8"), self.client_address)
+        # player clicked button play again
+        elif msg == "p":
+            playersReady -= 1
+            playersLeftScoreboard += 1
+            print("Players: " + str(playersReady))
+            if playersLeftScoreboard == 2:
+                over = False
+                scores = dict()
+            socket.sendto(bytes("p", "utf-8"), self.client_address)
+        # player is in main game loop
         else:
             if msg[0] == "c":
                 parts = msg[1:].split(",")
