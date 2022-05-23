@@ -29,7 +29,7 @@ game_state = "lobby"
 
 
 clicked = False
-point_font = pygame.font.SysFont('Arial black', 24)
+point_font = pygame.font.SysFont('Arial black', 20)
 finalFont = pygame.font.SysFont('Arial', 25)
 
 # game loop
@@ -116,7 +116,13 @@ while True:
 
         # scores
         my_score = point_font.render(str(points[0]), True, (4, 219, 15))
-        screen.blit(my_score, (SCREEN_WIDTH - my_score.get_width() - 5, SCREEN_HEIGHT - my_score.get_height() - 5))
+        op_score = point_font.render(str(points[1]), True, (4, 219, 15))
+        you_txt = point_font.render("YOU", True, (4, 219, 15))
+        op_txt = point_font.render("OPPONENT", True, (4, 219, 15))
+        screen.blit(my_score, (5, you_txt.get_height() + 5))
+        screen.blit(op_score, (SCREEN_WIDTH - op_score.get_width() - 5, you_txt.get_height() + 5))
+        screen.blit(you_txt, (5, 0))
+        screen.blit(op_txt, (SCREEN_WIDTH - op_txt.get_width() - 5, 0))
 
         pygame.display.update()
     # scoreboard and play again
