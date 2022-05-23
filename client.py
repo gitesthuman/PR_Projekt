@@ -1,10 +1,12 @@
 import socket
+import sys
 import pygame
 
 
 HOST, PORT = "localhost", 666
+if len(sys.argv) == 2:
+    HOST = sys.argv[1]
 
-# SOCK_DGRAM is the socket type to use for UDP sockets
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 print("Connected to the server")
@@ -25,9 +27,6 @@ asteroid_img = pygame.image.load("assets/asteroid.png")
 space_img = pygame.transform.scale(pygame.image.load("assets/space.png"), (640, 480))
 game_state = "lobby"
 
-
-# As you can see, there is no connect() call; UDP has no connections.
-# Instead, data is directly sent to the recipient via sendto().
 
 clicked = False
 point_font = pygame.font.SysFont('Arial black', 24)
@@ -59,12 +58,12 @@ while True:
         if clicked:
             pygame.draw.rect(screen, (3, 161, 11), (SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 - 20, 140, 40))
         else:
-            buttonText = font.render('START', True, (255, 255, 255))
             if SCREEN_WIDTH / 2 - 70 <= mouse[0] <= SCREEN_WIDTH / 2 + 70 and SCREEN_HEIGHT / 2 - 20 <= mouse[1] <= SCREEN_HEIGHT / 2 + 20:
                 pygame.draw.rect(screen, (200, 200, 200), (SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 - 20, 140, 40))
             else:
                 pygame.draw.rect(screen, (100, 100, 100), (SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 - 20, 140, 40))
 
+        buttonText = font.render('START', True, (255, 255, 255))
         screen.blit(buttonText, (SCREEN_WIDTH / 2 - buttonText.get_width() / 2, SCREEN_HEIGHT / 2 - buttonText.get_height() / 2))
 
         # updates the frames of the game
@@ -161,8 +160,5 @@ while True:
         # updates the frames of the game
         pygame.display.update()
 
-
-# sock.sendto(bytes("q", "utf-8"), (HOST, PORT))
-# received = str(sock.recv(1024), "utf-8")
 sock.close()
 print("Disconnected")
