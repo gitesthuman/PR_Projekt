@@ -58,12 +58,12 @@ while True:
         if clicked:
             pygame.draw.rect(screen, (3, 161, 11), (SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 - 20, 140, 40))
         else:
+            buttonText = font.render('START', True, (255, 255, 255))
             if SCREEN_WIDTH / 2 - 70 <= mouse[0] <= SCREEN_WIDTH / 2 + 70 and SCREEN_HEIGHT / 2 - 20 <= mouse[1] <= SCREEN_HEIGHT / 2 + 20:
                 pygame.draw.rect(screen, (200, 200, 200), (SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 - 20, 140, 40))
             else:
                 pygame.draw.rect(screen, (100, 100, 100), (SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 - 20, 140, 40))
-
-        buttonText = font.render('START', True, (255, 255, 255))
+                
         screen.blit(buttonText, (SCREEN_WIDTH / 2 - buttonText.get_width() / 2, SCREEN_HEIGHT / 2 - buttonText.get_height() / 2))
 
         # updates the frames of the game
