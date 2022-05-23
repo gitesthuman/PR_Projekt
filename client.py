@@ -133,9 +133,7 @@ while True:
                     msg = "p"
                     isDraw = False
                     win = False
-
-        sock.sendto(bytes(msg, "utf-8"), (HOST, PORT))
-        received = str(sock.recv(1024), "utf-8")
+                    sock.sendto(bytes(msg, "utf-8"), (HOST, PORT))
 
         if isDraw:
             text = finalFont.render("DRAW!", True, (255, 255, 255))
