@@ -57,7 +57,7 @@ def spawn():
                 i -= 1
             i += 1
 
-        if random.randint(0, 200) == 0 and counter >= 3 * 64:
+        if random.randint(0, 100) == 0 and counter >= 3 * 64:
             asteroids.append(Asteroid())
 
         time.sleep(0.014)
@@ -65,13 +65,6 @@ def spawn():
 
 
 class ThreadedUDPHandler(socketserver.BaseRequestHandler):
-    """
-    This class works similar to the TCP handler class, except that
-    self.request consists of a pair of data and client socket, and since
-    there is no connection the client address must be given explicitly
-    when sending data back via sendto().
-    """
-
     def handle(self):
         global scores
         global over
@@ -88,7 +81,7 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
         msg = data.decode("utf-8")
 
         # check if game is over
-        if over and msg != "p" and msg != "s" and msg != "l":
+        if over and msg != "e" and msg != "p" and msg != "s" and msg != "l":
             points = [str(scores[self.client_address[1]])] \
                      + [str(scores[k]) for k in scores.keys() if k != self.client_address[1]]
             msg = "o" + ','.join(points)
@@ -115,6 +108,7 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
                     socket.sendto(bytes("s", "utf-8"), self.client_address)
                     gameStarted = True
                     playersLeftScoreboard = 0
+                    asteroids.clear()
                 else:
                     socket.sendto(bytes("l", "utf-8"), self.client_address)
         # player clicked button play again
@@ -125,6 +119,7 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
             if playersLeftScoreboard == 2:
                 over = False
                 scores = dict()
+            socket.sendto(bytes("p", "utf-8"), self.client_address)
         # player is in main game loop
         else:
             if msg[0] == "c":
@@ -164,4 +159,4 @@ t = threading.Thread(target=spawn)
 
 with ThreadedUDPServer((HOST, PORT), ThreadedUDPHandler) as server:
     t.start()
-    server.serve_forever()  # 64 times per second
+    server.serve_forever()

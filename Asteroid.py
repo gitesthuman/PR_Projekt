@@ -46,7 +46,7 @@ class Asteroid:
         return False
 
     def out(self):
-        if self.__x < -100 or self.__x > width + 100 or self.__y < -100 or self.__y > height + 100:
+        if self.__x < -self.__size*2 or self.__x > width + self.__size*2 or self.__y < -self.__size*2 or self.__y > height + self.__size*2:
             return True
         return False
 

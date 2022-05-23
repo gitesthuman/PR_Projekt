@@ -54,6 +54,7 @@ while True:
         if received == "s":
             game_state = "play"
             clicked = False
+            timer = 0
 
         if clicked:
             pygame.draw.rect(screen, (3, 161, 11), (SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 - 20, 140, 40))
@@ -123,7 +124,6 @@ while True:
         pygame.mouse.set_visible(True)
         mouse = pygame.mouse.get_pos()
         screen.fill((0, 0, 0))
-        msg = "e"
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
                 pygame.quit()
@@ -134,6 +134,7 @@ while True:
                     isDraw = False
                     win = False
                     sock.sendto(bytes(msg, "utf-8"), (HOST, PORT))
+                    received = str(sock.recv(1024), "utf-8")
 
         if isDraw:
             text = finalFont.render("DRAW!", True, (255, 255, 255))
