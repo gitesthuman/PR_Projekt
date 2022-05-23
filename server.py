@@ -88,7 +88,7 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
         msg = data.decode("utf-8")
 
         # check if game is over
-        if over and msg != "e" and msg != "p" and msg != "s" and msg != "l":
+        if over and msg != "p" and msg != "s" and msg != "l":
             points = [str(scores[self.client_address[1]])] \
                      + [str(scores[k]) for k in scores.keys() if k != self.client_address[1]]
             msg = "o" + ','.join(points)
@@ -117,9 +117,6 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
                     playersLeftScoreboard = 0
                 else:
                     socket.sendto(bytes("l", "utf-8"), self.client_address)
-        # player is in scoreboard
-        elif msg == "e":
-            socket.sendto(bytes("e", "utf-8"), self.client_address)
         # player clicked button play again
         elif msg == "p":
             playersReady -= 1
@@ -128,7 +125,6 @@ class ThreadedUDPHandler(socketserver.BaseRequestHandler):
             if playersLeftScoreboard == 2:
                 over = False
                 scores = dict()
-            socket.sendto(bytes("p", "utf-8"), self.client_address)
         # player is in main game loop
         else:
             if msg[0] == "c":
