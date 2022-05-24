@@ -8,7 +8,7 @@ from Asteroid import Asteroid
 semaphore = threading.Lock()
 
 asteroids = []
-gameDuration = 15  # in seconds
+gameDuration = 60  # in seconds
 limit = 64 * gameDuration
 counter = 0
 over = False
