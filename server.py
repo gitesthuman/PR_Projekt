@@ -1,5 +1,6 @@
 import random
 import socketserver
+import sys
 import threading
 import time
 
@@ -154,6 +155,8 @@ class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
 
 
 HOST, PORT = "localhost", 666
+if len(sys.argv) == 2:
+    HOST = sys.argv[1]
 t = threading.Thread(target=spawn)
 
 with ThreadedUDPServer((HOST, PORT), ThreadedUDPHandler) as server:

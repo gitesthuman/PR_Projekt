@@ -21,6 +21,7 @@ points = [0, 0]
 timer = 0
 isDraw = False
 win = False
+lobby = False
 crosshair_img = pygame.image.load("assets/crosshair.png")
 crosshair2_img = pygame.image.load("assets/crosshair2.png")
 asteroid_img = pygame.image.load("assets/asteroid.png")
@@ -95,6 +96,7 @@ while True:
             elif points[0] == max(points[1:]):
                 isDraw = True
             game_state = "final"
+            lobby = False
 
         if game_state == "final":
             continue
@@ -140,6 +142,10 @@ while True:
                     isDraw = False
                     win = False
                     sock.sendto(bytes(msg, "utf-8"), (HOST, PORT))
+                    lobby = True
+
+        if lobby:
+            continue
 
         if isDraw:
             text = finalFont.render("DRAW!", True, (255, 255, 255))
